@@ -6,12 +6,7 @@ using Smod2.Attributes;
 using Smod2.Config;
 using Smod2.EventHandlers;
 using Smod2.Events;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
 
 namespace ArithFeather.Wild106Portals
 {
@@ -26,7 +21,7 @@ namespace ArithFeather.Wild106Portals
 		SmodMinor = 4,
 		SmodRevision = 0
 		)]
-	public class Wild106Portals : Plugin, IEventHandler106CreatePortal, IEventHandlerWaitingForPlayers, IEventHandlerSetRole
+	public class Wild106Portals : Plugin, IEventHandler106CreatePortal, IEventHandlerWaitingForPlayers, IEventHandlerSetRole, IEventHandlerLCZDecontaminate
 	{
 		private readonly Vector portalOffset = new Vector(0, -2f, 0);
 
@@ -44,7 +39,23 @@ namespace ArithFeather.Wild106Portals
 
 		private List<PlayerSpawnPoint> portalLoadedSpawns;
 		public List<PlayerSpawnPoint> PortalLoadedSpawns => portalLoadedSpawns ?? (portalLoadedSpawns = new List<PlayerSpawnPoint>());
-		public void On106CreatePortal(Player106CreatePortalEvent ev) => ev.Position = PortalLoadedSpawns[UnityEngine.Random.Range(0, PortalLoadedSpawns.Count)].Position + portalOffset;
+
+		private List<PlayerSpawnPoint> deconLoadedSpawns;
+		public List<PlayerSpawnPoint> DeconLoadedSpawns => deconLoadedSpawns ?? (deconLoadedSpawns = new List<PlayerSpawnPoint>());
+
+		private bool decontaminationStarted;
+
+		public void On106CreatePortal(Player106CreatePortalEvent ev)
+		{
+			if (decontaminationStarted && DeconLoadedSpawns.Count > 0)
+			{
+				ev.Position = DeconLoadedSpawns[UnityEngine.Random.Range(0, DeconLoadedSpawns.Count)].Position + portalOffset;
+			}
+			else if (!decontaminationStarted && PortalLoadedSpawns.Count > 0)
+			{
+				ev.Position = PortalLoadedSpawns[UnityEngine.Random.Range(0, PortalLoadedSpawns.Count)].Position + portalOffset;
+			}
+		}
 
 		public void OnWaitingForPlayers(WaitingForPlayersEvent ev)
 		{
@@ -56,6 +67,7 @@ namespace ArithFeather.Wild106Portals
 			portalData = SpawnDataIO.Open("sm_plugins/PortalSpawnLocations.txt");
 
 			PortalLoadedSpawns.Clear();
+			decontaminationStarted = false;
 
 			var playerPointCount = PortalData.Count;
 			var rooms = CustomRoomManager.Instance.Rooms;
@@ -78,6 +90,18 @@ namespace ArithFeather.Wild106Portals
 					}
 				}
 			}
+
+			DeconLoadedSpawns.Clear();
+			var spawnCount = PortalLoadedSpawns.Count;
+			for (int i = 0; i < spawnCount; i++)
+			{
+				var spawn = PortalLoadedSpawns[i];
+
+				if (spawn.ZoneType != ZoneType.LCZ)
+				{
+					DeconLoadedSpawns.Add(spawn);
+				}
+			}
 		}
 
 		public void OnSetRole(PlayerSetRoleEvent ev)
@@ -87,5 +111,7 @@ namespace ArithFeather.Wild106Portals
 				ev.Player.PersonalBroadcast(10, "SCP106 has been changed on this server. Your portals will now randomly teleport you almost anywhere in the facility.", false);
 			}
 		}
+
+		public void OnDecontaminate() => decontaminationStarted = true;
 	}
 }
