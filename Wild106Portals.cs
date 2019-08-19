@@ -16,15 +16,13 @@ namespace ArithFeather.Wild106Portals
 		description = "",
 		id = "ArithFeather.Wild106Portals",
 		configPrefix = "afwp",
-		version = "1.0",
+		version = "1.1",
 		SmodMajor = 3,
 		SmodMinor = 4,
 		SmodRevision = 0
 		)]
 	public class Wild106Portals : Plugin, IEventHandler106CreatePortal, IEventHandlerWaitingForPlayers, IEventHandlerSetRole, IEventHandlerLCZDecontaminate
 	{
-		private readonly Vector portalOffset = new Vector(0, -2f, 0);
-
 		public override void Register()
 		{
 			AddEventHandlers(this);
@@ -49,11 +47,11 @@ namespace ArithFeather.Wild106Portals
 		{
 			if (decontaminationStarted && DeconLoadedSpawns.Count > 0)
 			{
-				ev.Position = DeconLoadedSpawns[UnityEngine.Random.Range(0, DeconLoadedSpawns.Count)].Position + portalOffset;
+				ev.Position = DeconLoadedSpawns[UnityEngine.Random.Range(0, DeconLoadedSpawns.Count)].Position;
 			}
 			else if (!decontaminationStarted && PortalLoadedSpawns.Count > 0)
 			{
-				ev.Position = PortalLoadedSpawns[UnityEngine.Random.Range(0, PortalLoadedSpawns.Count)].Position + portalOffset;
+				ev.Position = PortalLoadedSpawns[UnityEngine.Random.Range(0, PortalLoadedSpawns.Count)].Position;
 			}
 		}
 
@@ -85,7 +83,7 @@ namespace ArithFeather.Wild106Portals
 					if (p.RoomType == r.Name && p.ZoneType == r.Zone)
 					{
 						PortalLoadedSpawns.Add(new PlayerSpawnPoint(p.RoomType, p.ZoneType,
-							Tools.Vec3ToVec(r.Transform.TransformPoint(Tools.VecToVec3(p.Position))) + new Vector(0, 0.3f, 0),
+							Tools.Vec3ToVec(r.Transform.TransformPoint(Tools.VecToVec3(p.Position))) + new Vector(0, -1.7f, 0),
 							Tools.Vec3ToVec(r.Transform.TransformDirection(Tools.VecToVec3(p.Rotation)))));
 					}
 				}
